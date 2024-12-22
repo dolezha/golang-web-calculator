@@ -1,7 +1,7 @@
 # CalcAPI - Go
 
-## Table of Contents
-- [English version. Description](#description)
+### Navigation: English Version
+- [Description](#description)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -12,7 +12,8 @@
     - [Division by Zero (422 STATUS: Division by zero)](#division-by-zero-422-status-division-by-zero)
     - [Server Error (500 STATUS)](#server-error-500-status)
 
-- [Русскоязычная версия. Описание](#описание)
+### Навигация: Русская версия
+- [Описание](#описание)
 - [Начало работы](#начало-работы)
   - [Необходимые требования](#необходимые-требования)
   - [Установка](#установка)
@@ -22,10 +23,8 @@
     - [Некорректное выражение (422 STATUS: Expression is not valid)](#некорректное-выражение-422-status-expression-is-not-valid)
     - [Деление на ноль (422 STATUS: Division by zero)](#деление-на-ноль-422-status-division-by-zero)
     - [Ошибка сервера (500 STATUS)](#ошибка-сервера-500-status)
-   
 
 ---
-
 
 ## Description
 
@@ -39,7 +38,7 @@ CalcAPI is a Go-based API calculator that processes mathematical expressions pro
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/dolezha/golang-web-calculator.git
    cd <repository_folder>
    ```
 2. Run the application:
@@ -89,7 +88,7 @@ CalcAPI — это API калькулятор на Go, который прини
 ### Установка
 1. Клонируйте репозиторий:
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/dolezha/golang-web-calculator.git
    cd <repository_folder>
    ```
 2. Запустите приложение:
