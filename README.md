@@ -1,7 +1,7 @@
 # CalcAPI - Go
 
 ## Table of Contents
-- [Description](#description)
+- [English version. Description](#description)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -12,12 +12,7 @@
     - [Division by Zero (422 STATUS: Division by zero)](#division-by-zero-422-status-division-by-zero)
     - [Server Error (500 STATUS)](#server-error-500-status)
 
----
-
-# CalcAPI - Go (Русская версия)
-
-## Содержание
-- [Описание](#описание)
+- [Русскоязычная версия. Описание](#описание)
 - [Начало работы](#начало-работы)
   - [Необходимые требования](#необходимые-требования)
   - [Установка](#установка)
@@ -27,6 +22,10 @@
     - [Некорректное выражение (422 STATUS: Expression is not valid)](#некорректное-выражение-422-status-expression-is-not-valid)
     - [Деление на ноль (422 STATUS: Division by zero)](#деление-на-ноль-422-status-division-by-zero)
     - [Ошибка сервера (500 STATUS)](#ошибка-сервера-500-status)
+   
+
+---
+
 
 ## Description
 
