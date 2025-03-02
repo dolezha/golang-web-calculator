@@ -17,7 +17,7 @@
 ## Быстрый старт
 
 1. Клонируйте репозиторий:
-git clone https://github.com/your-username/calculator.git
+git clone https://github.com/dolezha/golang-web-calculator.git
 cd calculator
 
 2. Запустите оркестратор:
@@ -27,17 +27,24 @@ go run cmd/calc_service/main.go
 ## Примеры использования
 
 ### 1. Отправка выражения на вычисление
+```
 curl -X POST "http://localhost:8080/api/v1/calculate" \
 -H "Content-Type: application/json" \
 -d '{"expression": "2+22"}'
+```
 
 Ответ:
+```
 {"id": "1234567890"}
+```
 
 ### 2. Проверка статуса вычисления
+```
 curl -X GET "http://localhost:8080/api/v1/expressions/1234567890"
+```
 
 Ответ:
+```
 {
     "expression": {
         "id": "1234567890",
@@ -45,11 +52,14 @@ curl -X GET "http://localhost:8080/api/v1/expressions/1234567890"
         "result": 6
     }
 }
+```
 
 ### 3. Получение списка всех выражений
+```
 curl -X GET "http://localhost:8080/api/v1/expressions"
-
+```
 Ответ:
+```
 {
     "expressions": [
         {
@@ -59,25 +69,29 @@ curl -X GET "http://localhost:8080/api/v1/expressions"
         }
     ]
 }
-
+```
 
 ### Обработка ошибок
 
 Невалидное выражение:
-bash
+```
 curl -X POST "http://localhost:8080/api/v1/calculate" \
 -H "Content-Type: application/json" \
 -d '{"expression": "2++2"}'
-
+```
 Ответ (422):
+```
 {"error": "невалидное выражение"}
-
+```
 Несуществующее выражение:
+```
 curl -X GET "http://localhost:8080/api/v1/expressions/nonexistent"
+```
 
 Ответ (404):
+```
 {"error": "нет такого выражения"}
-
+```
 
 
 ## Конфигурация
