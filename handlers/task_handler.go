@@ -11,10 +11,8 @@ import (
 func TaskHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		// Проверяем, запрашивается ли конкретная задача
 		parts := strings.Split(r.URL.Path, "/")
 		if len(parts) > 2 && parts[len(parts)-2] == "task" {
-			// Получение конкретной задачи по ID
 			taskID := parts[len(parts)-1]
 			task, exists := services.GetTask(taskID)
 			if !exists {
@@ -28,7 +26,6 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Получение следующей задачи для выполнения
 		task, err := services.GetNextTask()
 		if err != nil {
 			http.Error(w, "нет задач", http.StatusNotFound)
@@ -38,6 +35,7 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 			"task": task,
 		}
 		utils.RespondWithJSON(w, response, http.StatusOK)
+
 	case http.MethodPost:
 		var req struct {
 			ID     string   `json:"id"`

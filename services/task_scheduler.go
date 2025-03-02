@@ -11,17 +11,15 @@ import (
 	"time"
 )
 
-// Добавляем новые типы для разбора выражений
 type Operation struct {
-	Type     string // "+", "-", "*", "/"
-	Priority int    // приоритет операции
+	Type     string
+	Priority int
 	Left     *Operation
 	Right    *Operation
 	Value    float64
 	IsValue  bool
 }
 
-// Для упрощения используем глобальные карты. В реальной системе – БД.
 var (
 	expressions = make(map[string]*models.Expression)
 	tasks       = make(map[string]*models.Task)
@@ -137,7 +135,6 @@ func GetNextTask() (*models.Task, error) {
 		if task.Status == "pending" {
 			task.Status = "computing"
 
-			// Обновляем статус выражения
 			if expr, exists := expressions[task.ExpressionID]; exists {
 				expr.Status = models.StatusComputing
 			}
@@ -162,18 +159,15 @@ func SubmitTaskResult(taskID string, result float64) error {
 		return errors.New("неверный статус задачи")
 	}
 
-	// Обновляем результат задачи
 	task.Result = &result
 	task.Status = "done"
 	fmt.Printf("Задача %s обновлена: статус=%s, результат=%v\n",
 		task.ID, task.Status, *task.Result)
 
-	// Обновляем статус и результат выражения
 	expr := expressions[task.ExpressionID]
 	if expr != nil {
 		fmt.Printf("Проверяем статус выражения %s\n", expr.ID)
 
-		// Важное изменение: копируем задачи в локальный слайс
 		var exprTasks []models.Task
 		for _, t := range tasks {
 			if t.ExpressionID == expr.ID {
@@ -181,7 +175,6 @@ func SubmitTaskResult(taskID string, result float64) error {
 			}
 		}
 
-		// Проверяем все задачи выражения
 		allDone := true
 		var lastResult float64
 		for _, t := range exprTasks {
@@ -195,7 +188,6 @@ func SubmitTaskResult(taskID string, result float64) error {
 			}
 		}
 
-		// Если все задачи выполнены, обновляем выражение
 		if allDone {
 			expr.Status = models.StatusDone
 			expr.Result = &lastResult
@@ -239,7 +231,6 @@ func buildTree(tokens []string) (*Operation, error) {
 		return nil, errors.New("пустое выражение")
 	}
 
-	// Сначала ищем + и -
 	for i := len(tokens) - 1; i >= 0; i-- {
 		if tokens[i] == "+" || tokens[i] == "-" {
 			left, err := buildTree(tokens[:i])
@@ -259,7 +250,6 @@ func buildTree(tokens []string) (*Operation, error) {
 		}
 	}
 
-	// Затем * и /
 	for i := len(tokens) - 1; i >= 0; i-- {
 		if tokens[i] == "*" || tokens[i] == "/" {
 			left, err := buildTree(tokens[:i])
@@ -279,7 +269,6 @@ func buildTree(tokens []string) (*Operation, error) {
 		}
 	}
 
-	// Если нет операторов, это число
 	val, err := strconv.ParseFloat(strings.Join(tokens, ""), 64)
 	if err != nil {
 		return nil, fmt.Errorf("некорректное число: %v", err)

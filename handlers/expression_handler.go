@@ -14,7 +14,6 @@ func ExpressionsListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	expressions := services.GetExpressionsList()
-	// Изменяем формат ответа согласно требованиям
 	response := struct {
 		Expressions []struct {
 			ID     string                  `json:"id"`
@@ -43,7 +42,6 @@ func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// Получаем id из URL, например /api/v1/expressions/{id}
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 4 {
 		http.Error(w, "bad request", http.StatusBadRequest)

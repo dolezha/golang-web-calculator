@@ -27,7 +27,7 @@ func StartAgent() {
 	for i := 0; i < computingPower; i++ {
 		go worker(i)
 	}
-	select {} // блокировка главной горутины
+	select {}
 }
 
 func worker(id int) {
