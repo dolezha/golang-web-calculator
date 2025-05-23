@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  calc-service:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_PATH=/app/data/calculator.db
+      - PORT=8080
+      - JWT_SECRET=docker-secret-key-change-in-production
+    volumes:
+      - calc_data:/app/data
+    networks:
+      - calc_network
+
+  agent1:
+    build: .
+    command: ["./calc-agent"]
+    environment:
+      - COMPUTING_POWER=2
+      - TIME_ADDITION_MS=1000
+      - TIME_SUBTRACTION_MS=1000
+      - TIME_MULTIPLICATION_MS=2000
+      - TIME_DIVISION_MS=2000
+    depends_on:
+      - calc-service
+    networks:
+      - calc_network
+
+  agent2:
+    build: .
+    command: ["./calc-agent"]
+    environment:
+      - COMPUTING_POWER=2
+      - TIME_ADDITION_MS=500
+      - TIME_SUBTRACTION_MS=500
+      - TIME_MULTIPLICATION_MS=1000
+      - TIME_DIVISION_MS=1000
+    depends_on:
+      - calc-service
+    networks:
+      - calc_network
+
+volumes:
+  calc_data:
+
+networks:
+  calc_network:
+    driver: bridge 

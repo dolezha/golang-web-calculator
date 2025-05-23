@@ -8,50 +8,74 @@ import (
 	"strings"
 )
 
-func TaskHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) > 2 && parts[len(parts)-2] == "task" {
-			taskID := parts[len(parts)-1]
-			task, exists := services.GetTask(taskID)
-			if !exists {
-				http.Error(w, "нет такой задачи", http.StatusNotFound)
-				return
-			}
-			response := map[string]interface{}{
-				"task": task,
-			}
-			utils.RespondWithJSON(w, response, http.StatusOK)
-			return
-		}
+type TaskHandler struct {
+	expressionService *services.ExpressionService
+}
 
-		task, err := services.GetNextTask()
-		if err != nil {
-			http.Error(w, "нет задач", http.StatusNotFound)
-			return
-		}
-		response := map[string]interface{}{
-			"task": task,
-		}
-		utils.RespondWithJSON(w, response, http.StatusOK)
+func NewTaskHandler(expressionService *services.ExpressionService) *TaskHandler {
+	return &TaskHandler{expressionService: expressionService}
+}
 
-	case http.MethodPost:
-		var req struct {
-			ID     string   `json:"id"`
-			Result *float64 `json:"result"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Result == nil {
-			utils.RespondWithJSON(w, map[string]interface{}{"error": "невалидные данные"}, http.StatusUnprocessableEntity)
-			return
-		}
-		err := services.SubmitTaskResult(req.ID, *req.Result)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		utils.RespondWithJSON(w, map[string]interface{}{"message": "результат записан"}, http.StatusOK)
-	default:
+func (th *TaskHandler) GetTask(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
+
+	task, err := th.expressionService.GetNextTask()
+	if err != nil {
+		utils.RespondWithJSON(w, map[string]string{"error": err.Error()}, http.StatusNotFound)
+		return
+	}
+
+	utils.RespondWithJSON(w, task, http.StatusOK)
+}
+
+func (th *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/internal/task/")
+	if path == "" {
+		utils.RespondWithJSON(w, map[string]string{"error": "ID задачи не указан"}, http.StatusBadRequest)
+		return
+	}
+
+	task, err := th.expressionService.GetTaskByID(path)
+	if err != nil {
+		utils.RespondWithJSON(w, map[string]string{"error": err.Error()}, http.StatusNotFound)
+		return
+	}
+
+	utils.RespondWithJSON(w, task, http.StatusOK)
+}
+
+func (th *TaskHandler) SubmitTask(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/internal/task/")
+	if path == "" {
+		utils.RespondWithJSON(w, map[string]string{"error": "ID задачи не указан"}, http.StatusBadRequest)
+		return
+	}
+
+	var reqBody struct {
+		Result float64 `json:"result"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		utils.RespondWithJSON(w, map[string]string{"error": "Неверный формат запроса"}, http.StatusBadRequest)
+		return
+	}
+
+	if err := th.expressionService.SubmitTaskResult(path, reqBody.Result); err != nil {
+		utils.RespondWithJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
+		return
+	}
+
+	utils.RespondWithJSON(w, map[string]string{"message": "Результат принят"}, http.StatusOK)
 }

@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	log.Println("Агент запущен")
+	log.Println("Agent started")
 	agent.StartAgent()
 }

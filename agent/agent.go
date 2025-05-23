@@ -21,9 +21,18 @@ func getEnvInt(key string, fallback int) int {
 	return fallback
 }
 
+func getServerURL() string {
+	if url := os.Getenv("SERVER_URL"); url != "" {
+		return url
+	}
+	return "http://calc-service:8080"
+}
+
 var computingPower = getEnvInt("COMPUTING_POWER", 4)
+var serverURL = getServerURL()
 
 func StartAgent() {
+	fmt.Printf("Starting agent with %d workers\n", computingPower)
 	for i := 0; i < computingPower; i++ {
 		go worker(i)
 	}
@@ -37,45 +46,40 @@ func worker(id int) {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		fmt.Printf("Воркер %d получил задачу %s\n", id, task.ID)
 		time.Sleep(time.Duration(task.OperationTime) * time.Millisecond)
 		result := compute(task)
 		err = submitTaskResult(task.ID, result)
 		if err != nil {
-			fmt.Printf("Ошибка отправки результата задачи %s: %v\n", task.ID, err)
-		} else {
-			fmt.Printf("Воркер %d завершил задачу %s с результатом %v\n", id, task.ID, result)
+			fmt.Printf("Error submitting task %s: %v\n", task.ID, err)
 		}
 	}
 }
 
 func getTaskFromServer() (*models.Task, error) {
-	resp, err := http.Get("http://localhost:8080/internal/task")
+	resp, err := http.Get(serverURL + "/internal/task")
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("нет задач")
+		return nil, fmt.Errorf("no tasks")
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
-	var data struct {
-		Task models.Task `json:"task"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	var task models.Task
+	if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
 		return nil, err
 	}
-	return &data.Task, nil
+	return &task, nil
 }
 
 func submitTaskResult(taskID string, result float64) error {
-	url := "http://localhost:8080/internal/task"
-	payload := fmt.Sprintf(`{"id":"%s", "result":%v}`, taskID, result)
+	url := fmt.Sprintf("%s/internal/task/%s", serverURL, taskID)
+	payload := fmt.Sprintf(`{"result":%v}`, result)
 	resp, err := http.Post(url, "application/json", strings.NewReader(payload))
 	if err != nil {
 		return err
@@ -83,31 +87,25 @@ func submitTaskResult(taskID string, result float64) error {
 	defer resp.Body.Close()
 	bodyBytes, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("ошибка отправки результата: %s", string(bodyBytes))
+		return fmt.Errorf("error submitting result: %s", string(bodyBytes))
 	}
 	return nil
 }
 
 func compute(task *models.Task) float64 {
-	fmt.Printf("Вычисляю задачу: %+v\n", task)
-
 	getArgValue := func(arg string) float64 {
 		if strings.HasPrefix(arg, "$") {
 			taskID := strings.TrimPrefix(arg, "$")
-			fmt.Printf("Получаем результат задачи %s\n", taskID)
 			for {
 				prevTask, err := getTaskResult(taskID)
 				if err == nil && prevTask.Result != nil {
-					fmt.Printf("Получен результат задачи %s: %v\n", taskID, *prevTask.Result)
 					return *prevTask.Result
 				}
-				fmt.Printf("Ожидание результата задачи %s...\n", taskID)
 				time.Sleep(100 * time.Millisecond)
 			}
 		}
 		val, err := strconv.ParseFloat(arg, 64)
 		if err != nil {
-			fmt.Printf("Ошибка преобразования аргумента %s: %v\n", arg, err)
 			return 0
 		}
 		return val
@@ -132,17 +130,19 @@ func compute(task *models.Task) float64 {
 }
 
 func getTaskResult(taskID string) (*models.Task, error) {
-	resp, err := http.Get(fmt.Sprintf("http://localhost:8080/internal/task/%s", taskID))
+	resp, err := http.Get(fmt.Sprintf("%s/internal/task/%s", serverURL, taskID))
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var data struct {
-		Task models.Task `json:"task"`
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("task not found")
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+
+	var task models.Task
+	if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
 		return nil, err
 	}
-	return &data.Task, nil
+	return &task, nil
 }

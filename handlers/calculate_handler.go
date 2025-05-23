@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"calculator/middleware"
 	"calculator/models"
 	"calculator/services"
 	"calculator/utils"
@@ -8,9 +9,23 @@ import (
 	"net/http"
 )
 
-func CalculateHandler(w http.ResponseWriter, r *http.Request) {
+type CalculateHandler struct {
+	expressionService *services.ExpressionService
+}
+
+func NewCalculateHandler(expressionService *services.ExpressionService) *CalculateHandler {
+	return &CalculateHandler{expressionService: expressionService}
+}
+
+func (ch *CalculateHandler) Calculate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	claims, ok := middleware.GetUserFromContext(r)
+	if !ok {
+		utils.RespondWithJSON(w, map[string]string{"error": "User not authorized"}, http.StatusUnauthorized)
 		return
 	}
 
@@ -20,7 +35,7 @@ func CalculateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expression, err := services.CreateExpression(reqBody.Expression)
+	expression, err := ch.expressionService.CreateExpression(claims.UserID, reqBody.Expression)
 	if err != nil {
 		utils.RespondWithJSON(w, map[string]string{"error": err.Error()}, http.StatusUnprocessableEntity)
 		return
